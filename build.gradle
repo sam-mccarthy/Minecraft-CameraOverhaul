@@ -1,30 +1,45 @@
- subprojects {
+def scriptDir = buildscript.sourceFile.parentFile
+
+tasks.register("build") {
+	it.dependsOn gradle.includedBuilds*.task(':build')
+}
+
+subprojects {
 	// Skip folders without a 'gradle.properties' file.
-	var hasProperties = new File(project.projectDir, "gradle.properties").exists()
-	if (!hasProperties) {
+	def propertiesFile = new File(project.projectDir, 'gradle.properties')
+	if (!propertiesFile.exists()) {
+		println "Skipping project $project.name"
 		return
 	}
 
+	// Merge in root properties.
+	def properties = new Properties();
+	properties.load(new File(scriptDir, 'gradle.properties').newReader())
+	properties.load(propertiesFile.newReader())
+
+	// Plugins
 	apply plugin: "java"
 
 	base {
-		archivesName = project.properties.archives_base_name
-		version = "${project.properties.mod_version}-${project.properties.loader_name}-${project.name}"
-		group = project.properties.maven_group
+		archivesName = properties.archives_base_name
+		version = "${properties.mod_version}-${properties.loader_name}-${project.name}"
+		group = properties.maven_group
 
-		//layout.buildDirectory = new File(rootProject.projectDir, "build")
-		layout.buildDirectory = new File(rootProject.projectDir, "build/${project.properties.loader_name}-${project.name}")
+		//layout.buildDirectory = new File(scriptDir, "build")
+		layout.buildDirectory = new File(scriptDir, "build/${properties.loader_name}-${project.name}")
 	}
 
 	// Subprojects use the same codebase, but different properties & preprocessor defines.
 	sourceSets {
-		main.java.srcDirs = [ new File(rootProject.projectDir, "src/main/java").absolutePath ]
-		main.resources.srcDirs = [ new File(rootProject.projectDir, "src/main/resources").absolutePath ]
+		main.java.srcDirs = [ new File(scriptDir, "src/main/java").absolutePath ]
+		main.resources.srcDirs = [ new File(scriptDir, "src/main/resources").absolutePath ]
 	}
 
 	// Language version.
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_1_8
+	java {
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_1_8
+	}
 	tasks.withType(JavaCompile) {
 		options.encoding = "UTF-8"
 		options.release = 17
@@ -35,7 +50,7 @@
 		annotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.1'
 	}
 
-	def mcVersionSplit = project.properties.minecraft_version.split("\\.")
+	def mcVersionSplit = properties.minecraft_version.split("\\.")
 	def mcVersionMajor = mcVersionSplit[0]
 	def mcVersionMain = mcVersionSplit[1]
 	def mcVersionMinor = mcVersionSplit.size() >= 3 ? (mcVersionSplit[2] as String).padLeft(2, '0') : '00'
@@ -46,7 +61,9 @@
 		it.options.compilerArgs += [
 			'-Xplugin:Manifold',
 			"-AMC_VERSION=${merged_mc_version}",
-			"-A${project.properties.loader_name.toUpperCase()}_LOADER"
+			"-A${properties.loader_name.toUpperCase()}_LOADER"
 		]
 	}
+
+	java.withSourcesJar()
 }

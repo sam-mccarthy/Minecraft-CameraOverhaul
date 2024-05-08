@@ -1,3 +1,7 @@
+buildscript {
+	apply from: '../../build.gradle'
+}
+
 plugins {
 	id 'fabric-loom' version '1.6-SNAPSHOT' apply false
 }
