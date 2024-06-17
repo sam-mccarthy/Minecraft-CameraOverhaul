@@ -17,7 +17,7 @@ public abstract class GameRendererMixin
 	@Final
 	private Camera camera;
 
-	@Inject(method = "bobView", at = @At("TAIL"))
+	@Inject(method = {"tiltViewWhenHurt", "bobViewWhenHurt"}, at = @At("HEAD"))
 	private void PostCameraUpdate(MatrixStack matrices, float f, CallbackInfo ci)
 	{
         Transform cameraTransform = new Transform(camera.getPos(), new Vec3d(camera.getPitch(), camera.getYaw(), 0d));
