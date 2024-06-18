@@ -20,10 +20,10 @@ public abstract class GameRendererMixin
 	@Inject(method = {"tiltViewWhenHurt", "bobViewWhenHurt"}, at = @At("HEAD"))
 	private void PostCameraUpdate(MatrixStack matrices, float f, CallbackInfo ci)
 	{
-        Transform cameraTransform = new Transform(camera.getPos(), new Vec3d(camera.getPitch(), camera.getYaw(), 0d));
+		Transform cameraTransform = new Transform(camera.getPos(), new Vec3d(camera.getPitch(), camera.getYaw(), 0d));
 
-        cameraTransform = ModifyCameraTransformCallback.EVENT.Invoker().ModifyCameraTransform(camera, cameraTransform);
+		cameraTransform = ModifyCameraTransformCallback.EVENT.Invoker().ModifyCameraTransform(camera, cameraTransform);
 
-        MathAbstractions.RotateMatrixByAxis(matrices, 0f, 0f, 1f, (float)cameraTransform.eulerRot.z);
+		MathAbstractions.RotateMatrixByAxis(matrices, 0f, 0f, 1f, (float)cameraTransform.eulerRot.z);
 	}
 }
